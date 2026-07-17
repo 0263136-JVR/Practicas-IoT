@@ -1,80 +1,79 @@
-#include <SPI.h>
-#include <LoRa.h>
+#include <SPI.h>       // Comunicacion SPI (requerida por la libreria LoRa)
+#include <LoRa.h>      // Libreria principal del modulo RA-02 / SX1278
 #include <ArduinoJson.h>
 
-#define LORA_SS   10
-#define LORA_RST  5
-#define LORA_DIO0 4
-#define LORA_FREQ 433E6
-#define SF    9
-#define BW    125E3
-#define CR    5
-
+// ── Pines SPI del RA-02 al ESP32 ────────────────────────────────────────────
+#define LORA_SS   10    // NSS  - Chip Select
+#define LORA_RST  5   // RST  - Reset
+#define LORA_DIO0 4    // DIO0 - Interrupcion de TX/RX listo
 // Pines SPI
 #define SCK_PIN   12
 #define MISO_PIN  13
 #define MOSI_PIN  11
 
+// ── Frecuencia: 433 MHz (banda ISM libre en Mexico) ─────────────────────────
+#define LORA_FREQ 433E6
+
+// ── Parametros RF ────────────────────────────────────────────────────────────
+#define SF    9          // Spreading Factor 9 (balance alcance/velocidad)
+#define BW    125E3      // Bandwidth 125 kHz
+#define CR    5          // Coding Rate 4/5
+
+
+float valor = 20.0;      // Dato simulado (en Semana 2: RPM del encoder)
+int   contadorPaquetes = 0;
+
 void setupLoRa() {
+  // Asignar pines personalizados al modulo
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
 
+  // Inicializar en 433 MHz
   if (!LoRa.begin(LORA_FREQ)) {
     Serial.println("ERROR: RA-02 no responde. Verifica conexiones y antena.");
-    while (true);
+    while (true);  // Detener si el modulo no inicia
   }
 
-  LoRa.setSpreadingFactor(SF);
-  LoRa.setSignalBandwidth(BW);
-  LoRa.setCodingRate4(CR);
-  LoRa.setSyncWord(0xBA); // Debe ser identico al transmisor del mismo equipo
+  //Configurar parametros RF (deben ser identicos en TX y RX)
+  LoRa.setSpreadingFactor(SF);      // SF9
+  LoRa.setSignalBandwidth(BW);      // 125 kHz
+  LoRa.setCodingRate4(CR);          // 4/5
+  LoRa.setTxPower(14);              // 14 dBm (maximo recomendado sin licencia)
+  LoRa.setSyncWord(0xBA);           // Palabra de sincronizacion privada del equipo
 
-  Serial.println("LoRa RX listo --- esperando paquetes...");
-}
-
-void procesarPaquete(int tamano) {
-  // Leer el JSON recibido
-  String jsonStr = "";
-  while (LoRa.available()) {
-    jsonStr += (char)LoRa.read();
-  }
-
-  // Parsear JSON
-  StaticJsonDocument<128> doc;
-  DeserializationError err = deserializeJson(doc, jsonStr);
-  if (err) {
-    Serial.print("Error al parsear JSON: ");
-    Serial.println(err.c_str());
-    return;
-  }
-
-  float valor       = doc["v"];
-  unsigned long ts  = doc["ts"];
-  int id            = doc["id"];
-  unsigned long lat = millis() - ts; // Latencia aproximada
-
-  // Leer RSSI y SNR del paquete recibido
-  int   rssi = LoRa.packetRssi(); // dBm (negativo, mas cercano a 0 = mejor)
-  float snr  = LoRa.packetSnr();  // dB (puede ser negativo en LoRa)
-
-  Serial.print("PKT #"); Serial.print(id);
-  Serial.print(" | Val: "); Serial.print(valor, 1);
-  Serial.print(" | RSSI: "); Serial.print(rssi);
-  Serial.print(" dBm | SNR: "); Serial.print(snr, 1);
-  Serial.print(" dB | Lat: "); Serial.print(lat);
-  Serial.println(" ms");
+  Serial.println("LoRa TX listo --- 433 MHz, SF9, BW125");
 }
 
 void setup() {
-  Serial.begin(115200);
-  while (!Serial); // Espera a que se abra el monitor serie
-  SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, LORA_SS);
-  setupLoRa();
+    Serial.begin(115200);
+    while (!Serial); // Espera a que se abra el monitor serie
+    SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, LORA_SS);
+    setupLoRa();
 }
 
 void loop() {
-  // Verificar si llego un paquete (sin bloquear)
-  int tamano = LoRa.parsePacket();
-  if (tamano > 0) {
-    procesarPaquete(tamano);
-  }
+  // Simular lectura de sensor
+  valor += 0.3;
+  if (valor > 35.0) valor = 20.0;
+  contadorPaquetes++;
+
+  // Construir JSON compacto
+  StaticJsonDocument<128> doc;
+  doc["v"]  = valor;
+  doc["ts"] = millis();         // Timestamp para calcular latencia
+  doc["id"] = contadorPaquetes;
+
+  char payload[80];
+  serializeJson(doc, payload);
+
+  // Enviar paquete LoRa
+  LoRa.beginPacket();           // Iniciar paquete
+  LoRa.print(payload);          // Escribir datos
+  LoRa.endPacket();             // Transmitir (bloqueante hasta que termina)
+
+  Serial.print("TX [");
+  Serial.print(contadorPaquetes);
+  Serial.print("]: ");
+  Serial.println(payload);
+
+  delay(2000);  // Esperar 2 s entre paquetes (respeta duty cycle 1% con SF9)
 }
