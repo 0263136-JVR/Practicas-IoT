@@ -1,0 +1,551 @@
+% =============================================================================
+%  PREGUNTAS DE REPORTE — Práctica: Comunicación LoRa con RA-02 (SX1278)
+%  Materia de Verano: Internet of Things (IoT)
+%  Universidad Panamericana · Ingeniería Mecatrónica · 6.° semestre
+%
+%  INSTRUCCIONES PARA EL ALUMNO:
+%     1. Abre en overleaf.com junto con la guía de práctica
+%     2. Responde TODAS las secciones — las que no alcanzaste en clase van de tarea
+%     3. Entrega el PDF compilado + sube el .tex a GitHub antes del viernes
+% =============================================================================
+
+\documentclass[11pt, letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{mdframed}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{pgffor}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{graphicx}
+
+\geometry{top=2.2cm, bottom=2.2cm, left=2.5cm, right=2.5cm}
+
+% ── Colores ───────────────────────────────────────────────────────────────────
+\definecolor{upBlue}    {HTML}{2E3A59}
+\definecolor{roseMain}  {HTML}{C2547A}
+\definecolor{roseLight} {HTML}{FAE8EF}
+\definecolor{tealMain}  {HTML}{0F6E56}
+\definecolor{tealLight} {HTML}{E1F5EE}
+\definecolor{amberMain} {HTML}{854F0B}
+\definecolor{amberLight}{HTML}{FAEEDA}
+\definecolor{purpleMain}{HTML}{534AB7}
+\definecolor{purpleLight}{HTML}{EEEDFE}
+\definecolor{grayLight} {HTML}{F5F5F5}
+\definecolor{grayMid}   {HTML}{BBBBBB}
+\definecolor{codeBack}  {HTML}{F0F4F0}
+\definecolor{codeComment}{HTML}{5A7A5A}
+\definecolor{codeKeyword}{HTML}{6030A0}
+\definecolor{codeString} {HTML}{A05000}
+
+% ── Estilo de código ─────────────────────────────────────────────────────────
+\lstdefinestyle{arduino}{
+  language=C++, backgroundcolor=\color{codeBack},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codeKeyword}\bfseries,
+  commentstyle=\color{codeComment}\itshape,
+  stringstyle=\color{codeString},
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=8pt,
+  frame=single, framerule=0.5pt, rulecolor=\color{roseMain},
+  breaklines=true, captionpos=b, tabsize=2, showstringspaces=false,
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1
+    {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+}
+\lstset{style=arduino}
+
+% ── Estilos de sección ────────────────────────────────────────────────────────
+\titleformat{\section}
+  {\large\bfseries\color{upBlue}}{\thesection.}{0.5em}{}
+  [\color{roseMain}\titlerule]
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{upBlue}}{\thesubsection.}{0.5em}{}
+
+% ── Encabezado ────────────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{upBlue} Reporte --- LoRa RA-02 (SX1278)}
+\fancyhead[R]{\small\color{upBlue} Universidad Panamericana}
+\fancyfoot[C]{\small\color{gray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{%
+  \hbox to\headwidth{\color{roseMain}\leaders\hrule height\headrulewidth\hfill}}
+
+% ── Cajas ─────────────────────────────────────────────────────────────────────
+\newenvironment{pregunta}[1]{%
+  \begin{mdframed}[backgroundcolor=purpleLight, linecolor=purpleMain, linewidth=1pt,
+    innerleftmargin=12pt, innerrightmargin=12pt,
+    innertopmargin=8pt,  innerbottommargin=8pt]
+  \textbf{\color{purpleMain}#1}\\[6pt]
+}{\end{mdframed}\vspace{0.2cm}}
+
+\newenvironment{instruccion}{%
+  \begin{mdframed}[backgroundcolor=tealLight, linecolor=tealMain, linewidth=1pt,
+    innerleftmargin=10pt, innerrightmargin=10pt,
+    innertopmargin=6pt,  innerbottommargin=6pt]
+  \small\textbf{\color{tealMain}Instrucci\'on:}\hspace{4pt}
+}{\end{mdframed}}
+
+% ── Líneas ────────────────────────────────────────────────────────────────────
+\newcommand{\linea}[1][5cm]{\underline{\hspace{#1}}}
+\newcommand{\respuesta}[1]{%
+  \vspace{4pt}%
+  \foreach \i in {1,...,#1}{%
+    \noindent\textcolor{grayMid}{\rule{\linewidth}{0.3pt}}\\[10pt]%
+  }%
+}
+
+
+% =============================================================================
+\begin{document}
+% =============================================================================
+
+% ── Portada ───────────────────────────────────────────────────────────────────
+\begin{center}
+  {\color{upBlue}\rule{\linewidth}{1.5pt}}\\[0.3cm]
+  {\Large\bfseries\color{upBlue} Reporte de Pr\'actica}\\[0.2cm]
+  {\large\bfseries\color{roseMain}
+    Pr\'actica 2: Comunicaci\'on LoRa punto a punto con RA-02 (SX1278 --- 433~MHz)}\\[0.15cm]
+  {\normalsize Materia de Verano: Internet of Things (IoT)
+    $\cdot$ Ingenier\'ia Mecatr\'onica $\cdot$ 6.\textdegree\ semestre}\\[0.3cm]
+  {\color{upBlue}\rule{\linewidth}{0.8pt}}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{tabular}{r>{\raggedright\arraybackslash}p{0.4\linewidth}r>{\raggedright\arraybackslash}p{0.3\linewidth}}
+  \textbf{Alumno 1:}  & Jaime Valencia Rodríguez&
+  \textbf{Alumno 2:}  & Marco Alberto Vázquez Preciado\\[0.5em]
+  \textbf{Equipo \#:} & 4&
+  \textbf{Fecha:}     & \today        \\[0.5em]
+  \textbf{GitHub:}    & https://github.com/0263136-JVR/Practicas-IoT/tree/main/Practica\%202& & \\
+\end{tabular}
+
+\vspace{0.4cm}
+
+% =============================================================================
+\section{Objetivo}
+% =============================================================================
+
+\begin{instruccion}
+  Describe en 2--3 oraciones el objetivo de la pr\'actica con tus propias palabras.
+  No copies el enunciado --- interpreta qu\'e quer\'ias lograr y por qu\'e es relevante.
+\end{instruccion}
+
+El objetivo de esta práctica es lograr utilizar de forma correcta un módulo LoRa RA-02 para crear una comunicación entre dos ESP32 a metros, o incluso kilómetros, de distancia. Con esto, podemos de forma efectiva enviar los mensajes que queramos desde la distancia que elijamos.
+
+% =============================================================================
+\section{Preguntas de hardware y conexión}
+% =============================================================================
+
+\begin{pregunta}{P1 --- SPI vs. UART}
+  En la pr\'actica del D\'ia 2 usaron BLE con el ESP32 (interfaz interna).
+  En esta pr\'actica usan SPI para comunicarse con el RA-02.
+  Explica con tus palabras qu\'e es SPI y por qu\'e el RA-02 lo requiere
+  en lugar de UART como el RYLR998.
+\end{pregunta}
+
+El SPI a diferencia del UART es un protocolo de comunicaci\'on s\'incrono que requiere de un l\'inea de reloj (SCLK) para sincronizar la transmisi\'on, lo que le permite ser sumamente r\'apido.
+Y es usado para el m\'odulo RA-02 porque no tiene un microcontrolador que use para gestionar l\'ogica de alto nivel y hacer todo el proceso de informaci\'on (trabajo sucio), que en este caso es nuestra placa ESP la encargada de hacer dicho labor.
+
+\vspace{1cm}
+
+\begin{pregunta}{P2 --- El pin DIO0}
+  El pin DIO0 del RA-02 se conecta a GPIO~2 del ESP32. ¿Para qu\'e sirve
+  este pin? ¿Qu\'e ocurrir\'ia si lo dejas sin conectar?
+\end{pregunta}
+
+Dicho pin (DIO0) es un pin digital que ayuda al m\'odulo RA-02 a generar se\~nales de aviso/interrupci\'on, parecido al NOTIFY, hacia nuestro MCU para que no sea necesario estar haciendo lecturas constantes a trav\'es del protocolo SPI, que elevar\'ia el consumo energ\'etico en demas\'ia y aletargar\'ia el proceso.
+
+Lo que ocurrir\'ia si decidi\'eramos no conectarlo a cualquier entrada GPIO de nuestra ESP es que no podr\'iamos conocer con exactitud el momento en el que el m\'odulo LoRa acaba de recibir informaci\'on, o cu\'ando acaba de terminar de mandarla. Hecho que nos dejar\'ia vendidos y sin conocer los momentos que rigen la correcta transmisi\'on de la informaci\'on.
+
+\vspace{1cm}
+
+\begin{pregunta}{P3 --- Voltaje de operaci\'on}
+  ¿Por qu\'e el RA-02 solo puede conectarse a 3.3~V y no a 5~V?
+  ¿Qu\'e componente interno se da\~nar\'ia si lo conectas a 5~V?
+\end{pregunta}
+
+Porque el circuito integrado que usa, SX1278, opera en un rango de voltaje seguro de 1.8 - 3.7V de acuerdo a la hoja de datos. Cosa que si elev\'aramos hasta los 5V destruir\'ia todo lo que permite al chip funcionar, desde sus reguladores de voltaje internos hasta el conmutador de radiofrecuencia y dejando en total desperfecto la aplicaci\'on.
+
+\vspace{1cm}
+
+\begin{pregunta}{P4 --- Antena y frecuencia}
+  El RA-02 opera a 433~MHz, mientras que el RYLR998 opera a 915~MHz.
+  ¿Cu\'al de los dos tiene mayor longitud de onda? ¿Qu\'e implica eso
+  para el tama\~no f\'isico de la antena y para la penetraci\'on en
+  paredes y obst\'aculos?
+\end{pregunta}
+
+Entre los dos m\'odulos es f\'acil deducir que el RYLR998 tiene un longitud de onda mucho m\'as pequeña, casi reducida al doble a comparaci\'on de la del RA-02, pero esto tiene implicaciones en todo el funcionamiento y aplicaci\'on espec\'ifica. 
+
+Para empezar el tamaño de sus antenas, donde su tamaño \'optimo es incomparable, mientras que un RYLR998 puede tener una antena de 8cm (sistema compacto), el RA-02 est\'a empujado hacia una antena de aproximadamente 17cm, y si acaso su tamaño se llega a reducir su operaci\'on se ver\'a estropeada, cosa que no es recomendable. Como segundo punto, es destacable comprender el c\'omo estas ondas opera en un mundo f\'isico lleno de obst\'aculos, mientras que una onda m\'as larga puede pasar sin mayor dificultad paredes, como es el caso del RA-02, las ondas cortas, como las del RYLR998, ser\'a considerablemente atenuada ante diversos obst\'aculos de gran tamaño, pero ver\'a una ventaja en cuestiones de infraestructura gracias al LoRaWAN.
+
+\vspace{1cm}
+
+\newpage
+
+% =============================================================================
+\section{Preguntas de código y librería}
+% =============================================================================
+
+\begin{pregunta}{P5 --- LoRa.begin() retorna false}
+  Durante la pr\'actica, \texttt{LoRa.begin()} puede retornar \texttt{false}.
+  Lista \textbf{tres causas} posibles y c\'omo diagnosticar cada una.
+\end{pregunta}
+
+\begin{tabular}{>{\centering}p{0.5cm} p{5cm} p{8cm}}
+  \toprule
+  \# & \textbf{Causa posible} & \textbf{C\'omo diagnosticar} \\
+  \midrule
+  1 & Error en la comunicación SPI& Se puede utilizar un SPI detector para garantizar que exista una comunicación entre el módulo y la ESP32.\\[2em]
+  2 & LoRa mal conectado& Con un multímetro comprobar todas las conexiones del módulo LoRa y asegurarse que van al lugar correcto.\\[2em]
+  3 & Pines incorrectos en software& Si se descartó la posibilidad de una mala conexión, verificar que se hayan configurado correctamente los pines dentro del programa.\\[2em]
+  \bottomrule
+\end{tabular}
+
+\vspace{0.4cm}
+
+\begin{pregunta}{P6 --- setSyncWord}
+  El c\'odigo usa \texttt{LoRa.setSyncWord(0xF3)}.
+  ¿Para qu\'e sirve? ¿Qu\'e pasar\'ia si el transmisor usa \texttt{0xF3}
+  y el receptor usa \texttt{0xF4}?
+  ¿Por qu\'e es importante que cada equipo use un valor diferente en el sal\'on?
+\end{pregunta}
+
+La syncword sirve para crear sincronizar dos módulos LoRa, y que solo estos puedan recibir datos entre sí, es decir, para no recibir información de un módulo LoRa no deseado.
+En un módulo ideal, si el transmisor usa xF3 y el receptor xF4, estos dos no se lograrían comunicar, pero de forma práctica, el receptor sí recibe la información. Esto lo probamos dentro de la práctica, y descubrimos que el módulo LoRa no necesita una coincidencia del 100\%, sino algo muy cercano a ello.
+Es importante que todos los equipos tengan una syncword diferente ya que de esta forma no recibiremos información que no queremos, es decir, información de algún otro equipo.
+
+\vspace{0.4cm}
+
+\begin{pregunta}{P7 --- Orden de llamadas}
+  En el c\'odigo de inicializaci\'on, \texttt{LoRa.setPins()} debe llamarse
+  \textbf{antes} de \texttt{LoRa.begin()}. Explica por qu\'e.
+  ¿Qu\'e pasa si se invierten las llamadas?
+\end{pregunta}
+
+Cuando se utiliza el comando LoRa.begin se envía una serie de comandos (bits) a través de los pines conectados al LoRa. Si antes de definir los pines de LoRa haces el begin, entonces el programa no sabrá sobre qué pines inicializará el LoRa, por lo tanto, el módulo no logrará encender de forma correcta.
+
+\vspace{0.4cm}
+
+\begin{pregunta}{P8 --- parsePacket vs. onReceive}
+  La librer\'ia LoRa ofrece dos modos de recepci\'on: \texttt{parsePacket()}
+  (usado en esta pr\'actica) y \texttt{LoRa.onReceive()} con una funci\'on
+  de callback. ¿Cu\'al es la diferencia? ¿En qu\'e situaci\'on preferir\'ias
+  char el callback?
+\end{pregunta}
+
+La función parsePacket() hace que el microcontrolador esté todo el tiempo intentando leer datos del módulo LoRa, inclusive cuando no existen datos. Esto causa que el microcontrolador no pueda ejecutar otra tarea. onReceive(), por el otro lado, funciona como una alerta, es decir, el módulo LoRa notifica al microcontrolador por medio de una interrupción que tiene un dato que leer, y de este modo, el microcontrolador puede hacer otras tareas.
+La última función puede ser muy útil en trabajos de campo, ya que esta te permite ingresar el microcontrolador en un estado de reposo hasta que no reciba un nuevo dato, y de esta forma ahorras mucha más energía.
+
+% =============================================================================
+\section{Datos obtenidos}
+% =============================================================================
+Despues de ejecutar nuestro codigo y probar con distintas distancias, obtuvimos los siguientes datos:
+
+ \begin{figure}[H]
+   \centering
+   \includegraphics[width=0.85\textwidth]{Practica 2/Datos_serial_3m.png}
+   \caption{Salida del Serial Monitor en 3 m}
+   \label{fig:serial}
+ \end{figure}
+
+  \begin{figure}[H]
+   \centering
+   \includegraphics[width=0.85\textwidth]{Practica 2/Datos_serial_10m.png}
+   \caption{Salida del Serial Monitor en 10 m}
+   \label{fig:serial}
+ \end{figure}
+
+   \begin{figure}[H]
+   \centering
+   \includegraphics[width=0.85\textwidth]{Practica 2/Datos_serial_25m.png}
+   \caption{Salida del Serial Monitor en 25 m}
+   \label{fig:serial}
+ \end{figure}
+
+   \begin{figure}[H]
+   \centering
+   \includegraphics[width=0.85\textwidth]{Practica 2/Datos_serial_60m.png}
+   \caption{Salida del Serial Monitor en 60 m}
+   \label{fig:serial}
+ \end{figure}
+    \begin{figure}[H]
+   \centering
+   \includegraphics[width=0.85\textwidth]{Practica 2/Datos_serial_transmisor.png}
+   \caption{Salida del Serial Monitor referente al Transmisor}
+   \label{fig:serial}
+ \end{figure}
+\newpage
+
+% =============================================================================
+\section{Preguntas de teoría RF}
+% =============================================================================
+
+\begin{pregunta}{P9 --- Spreading Factor y Time-on-Air}
+  Completa la siguiente tabla con los valores te\'oricos de Time-on-Air
+  para un payload de 13~bytes y BW~=~125~kHz, y con los valores
+  \textbf{reales} que mediste durante el experimento.
+\end{pregunta}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{>{\bfseries}p{2cm}
+                  >{\centering}p{2.5cm}
+                  >{\centering}p{2.5cm}
+                  >{\centering}p{2.5cm}
+                  p{4cm}}
+    \toprule
+    \textbf{SF} &
+    \textbf{ToA te\'orico} &
+    \textbf{Latencia medida} &
+    \textbf{RSSI (dBm)} &
+    \textbf{Observaci\'on del equipo} \\
+    \midrule
+    SF 7  & $\sim$50 ms   & 40 ms& -74& Latencia cerca de lo esperado\\[1.2em]
+    SF 9  & $\sim$165 ms  & 149 ms& -74& Latencia cerca de lo esperado\\[1.2em]
+    SF 12 & $\sim$2500 ms & 1020 ms& -81& Latencia a la mitad de lo esperado. Probablemente por la distancia.\\[1.2em]
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{pregunta}{P10 --- Análisis del experimento SF}
+  Con base en tus datos reales de la tabla anterior, responde:
+  \begin{enumerate}[leftmargin=1.5cm, label=\alph*)]
+    \item ¿La latencia medida se acerca al Time-on-Air te\'orico?
+          ¿A qu\'e se deben las diferencias?
+    \item ¿El RSSI cambi\'o significativamente al cambiar el SF?
+          Explica por qu\'e s\'i o por qu\'e no.
+    \item ¿Cu\'al SF usar\'ias para el proyecto final (motor a $\sim$50~m en
+          interior) y por qu\'e?
+  \end{enumerate}
+\end{pregunta}
+
+La latencia media es cercana al Time-on-Air teórico con SF7 y SF9, pero con SF12 se reduce a menos de la mitad. Esto probablemente es debido a la distancia que utilizamos para medirla. Ambos módulos estaban a menos de 1 metro de distancia.
+En cuanto al RSSI, este no cambia mucho respecto al SF. Esto debido a que el SF no aumenta el ruido en el sistema, sino solo modifica la forma en la que se envían los datos.
+Para el proyecto, utilizaríamos el SF7 ya que tiene la menor latencia, por lo que podremos enviar datos mucho más rápido.
+
+\vspace{0.4cm}
+
+\begin{pregunta}{P11 --- Duty cycle}
+  Con SF~9 y un payload de 13~bytes, el Time-on-Air es $\sim$165~ms.
+  La regulaci\'on mexicana limita el uso de la banda 433~MHz ISM
+  al \textbf{1\%} de duty cycle.
+  \begin{enumerate}[leftmargin=1.5cm, label=\alph*)]
+    \item Calcula el intervalo m\'inimo entre paquetes para cumplir el 1\%.
+    \item El c\'odigo de la pr\'actica usa \texttt{delay(2000)}.
+          ¿Cumple esa restricci\'on? Muestra el c\'alculo.
+    \item ¿Qu\'e ocurrir\'ia si usas SF~12 y mandas un paquete cada segundo?
+  \end{enumerate}
+\end{pregunta}
+
+Si el Time-on-Air es de 165 ms, nuestro ciclo completo sería 165 * 100 = 16.5 segundos. Si a esto le restamos el Time-on-Air, obtenemos 16.335 segundos de intervalo entre mensaje y mensaje.
+El código de la práctica no cumple con la regla del 1\%. Deberíamos de tener 16.335 seg, y tenemos 2 seg, por lo que tenemos un duty cycle mucho mayor al 1\%.
+Si usamos SF12 y enviamos un paquete cada segundo no vamos a cumplir con el duty cycle del 1\% requerido por la regulación mexicana.
+
+\vspace{0.4cm}
+
+\begin{pregunta}{P12 --- RSSI y SNR}
+  Con los datos de tu prueba de alcance, responde:
+  \begin{enumerate}[leftmargin=1.5cm, label=\alph*)]
+    \item ¿A qu\'e distancia el RSSI empez\'o a degradarse notablemente?
+    \item ¿El SNR fue positivo o negativo en alguna medici\'on?
+          ¿Qu\'e significa para LoRa tener SNR negativo?
+    \item ¿C\'omo podr\'ias mejorar el RSSI en una pr\'oxima prueba
+          sin cambiar la potencia de TX?
+  \end{enumerate}
+\end{pregunta}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{>{\centering}p{3cm} >{\centering}p{2.5cm} p{8cm}}
+    \toprule
+    \textbf{Distancia (m)} & \textbf{RSSI (dBm)} & \textbf{Observaciones} \\
+    \midrule
+    ~3 m& -69& Nada de obstáculos\\[0.8em]
+    ~10 m& -80& Nada de obstáculos\\[0.8em]
+    ~25 m& -105& Puerta y paredes entre módulos.\\[0.8em]
+    ~60 m& -105& Puertas, paredes, un edificio y escaleras metálicas de obstáculos.\\[0.8em]
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+El RSSI empezó a degradarse de forma bastante notable pasando los 60 metros. Mientras más nos alejábamos de estos 60 m, menos consistente recibíamos la información, hasta que no recibíamos nada.
+El SNR fue positivo para la mayoría de las mediciones, pero conforme nos alejábamos, este valor bajaba hasta convertirse en negativo. Esto significa que el ruido es más notable que la señal, por lo que es más difícil de recibir.
+Para mejorar el RSSI podríamos asegurarnos de tener menos obstáculos en el camino, y de esta forma poder alejarnos mucho más sin aumentar el RSSI.
+
+\vspace{0.4cm}
+
+\newpage
+
+% =============================================================================
+\section{Comparativa RA-02 vs. RYLR998}
+% =============================================================================
+
+\begin{pregunta}{P13 --- Tabla comparativa}
+  Completa la siguiente tabla con base en lo que experimentaste en ambas pr\'acticas.
+\end{pregunta}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{>{\bfseries}p{3.5cm}
+                  >{\centering\arraybackslash}p{4.5cm}
+                  >{\centering\arraybackslash}p{4.5cm}}
+    \toprule
+    \textbf{Caracter\'istica} &
+    \textbf{RYLR998 (UART + AT)} &
+    \textbf{RA-02 (SPI + librer\'ia)} \\
+    \midrule
+    N\'umero de cables al ESP32 &
+    4 cables (2 de datos TX y RX; 2 de alimentaci\'on VCC y GND)&
+    8 cables (6 de datos y control MISO, MOSI, CS, SCK, DI0, RST; 2 de alimentaci\'on VCC y GND)\\[1.2em]
+
+    Forma de configurar SF &
+    Mediante comandos AT enviados a través del puerto serial&
+    Mediante funciones de código de la librería\\[1.2em]
+
+    Librer\'ia necesaria &
+    Ninguna, solo manejo de UART con el otro dispositivo&
+    Requiere de la librer\'ia LoRa\\[1.2em]
+
+    Frecuencia de operaci\'on &
+    915MHz&
+    433MHz\\[1.2em]
+
+    Dificultad de conexi\'on &
+    Baja por la poca cantidad de cables y sin mucho conflicto en el bus de datos&
+    Considerablemente compleja por mapear correctamente pines \'utiles para el bus SPI más los pines de control\\[1.2em]
+
+    Flexibilidad de configuraci\'on &
+    Bastante limitada por su estricto r\'egimen a los comandos disponibles que ya est\'an configurados en su MCU&
+    Total, permite la configuraci\'on de cada parte por su acceso completo al registro del transceptor\\[1.2em]
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{pregunta}{P14 --- ¿Cuál elegirías para el proyecto final?}
+  Basado en la comparativa, ¿qu\'e m\'odulo LoRa elegir\'ias para el proyecto final
+  (control de motor con plataforma web)? Justifica con al menos \textbf{3 criterios
+  t\'ecnicos} espec\'ificos del escenario.
+\end{pregunta}
+
+La mejor opci\'on en definitiva sería el RYLR998. Primero porque suponiendo que es una aplicaci\'on industrial en una planta se podr\'ia contar con la infraestructura suficiente para repetir la señal y alcanzar un gran recorrido y que llegue de forma constante hasta la computadora y m\'odulo de recepci\'on. Segundo porque para sostener un constante flujo de datos, que se mantenga la respuesta r\'apida del sistema y sabiendo que se debe tener una conexi\'on web estable por medio de Wi-Fi, es necesario correr varios programas en segundo plano y el tener que mantener un m\'odulo tan configurable como lo es el RA-02 no es tan \'optimo, es mejor la sencillez del RYLR998 ya que lo que se necesita en la ejecuci\'on es simple y no tan elaborado. Tercero porque para los paros de emergencia y situaciones de alerta la respuesta del sistema debe ser totalmente independiente e inmediata, cosa que en un protocolo SPI, as\'incrono, no se lograr\'ia sumado a la incapacidad de respuesta ante fallos que afecten el bucle, lo que lo expone como una variante menos robusta dentro de este entorno.
+
+\vspace{1cm}
+
+% =============================================================================
+\section{Preguntas de integración con el proyecto final}
+% =============================================================================
+
+\begin{pregunta}{P15 --- El nodo LoRa en el proyecto final}
+  En el proyecto final, el ESP32 del motor va a transmitir telemetr\'ia
+  (RPM, setpoint, corriente) por LoRa al servidor. Dise\~na el payload
+  JSON que enviar\'ias. Indica el campo, tipo de dato, tama\~no en bytes
+  y por qu\'e lo incluyes.
+\end{pregunta}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{>{\ttfamily}p{3cm}
+                  >{\centering}p{2.5cm}
+                  >{\centering}p{2cm}
+                  p{6cm}}
+    \toprule
+    \textbf{Campo JSON} & \textbf{Tipo} & \textbf{Bytes} & \textbf{Justificaci\'on} \\
+    \midrule
+    "id"& uint8& 1& Campo de ID único del motor\\[1em]
+    "rpm"& float& 4& RPM actual del motor\\[1em]
+    "sp"& float& 4& Set Point deseado\\[1em]
+    "ts"& uint32& 4& Tiempo actual del sistema\\[1em]
+ "status"& uint8& 1&Dirección, encendido y apagado\\
+    \midrule
+    \textbf{Total} & & 14& \\[0.8em]
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{pregunta}{P16 --- ¿Qué SF usarías en producci\'on?}
+  El motor est\'a a 50~m del servidor dentro de una planta industrial.
+  Hay paredes de concreto y maquinaria met\'alica entre los dos nodos.
+  \begin{enumerate}[leftmargin=1.5cm, label=\alph*)]
+    \item ¿Qu\'e SF elegir\'ias y por qu\'e?
+    \item Calcula el Time-on-Air con ese SF para tu payload de la P15.
+    \item Calcula cu\'antos paquetes por hora puedes enviar cumpliendo
+          el 1\% de duty cycle.
+    \item ¿Es suficiente esa frecuencia para monitorear el motor en tiempo real?
+          ¿Qu\'e har\'ias si no lo es?
+  \end{enumerate}
+\end{pregunta}
+
+Eligiria SF9 ya que este me permitiria atravesar las paredes y maquinaria de mejor forma sin perder informacion.
+El Time-on-Air aproximado para nuestro payload será de 165 ms.
+Considerando que mi duty cycle debe de ser de 16.355 s para cumplir con el 1\% de la regulación mexicana, esto significa que puedo enviar 3.66 payload por minuto, por lo tanto, puedo enviar 219.6 payload en una hora.
+Esto no es suficiente para monitorear el motor. La mejor alternativa es utilizar otro protocolo de comunicación como lo es WiFi para disminuir la latencia de nuestro sistema y monitorear de forma adecuada nuestro color.
+
+
+% =============================================================================
+\section{Conclusiones}
+% =============================================================================
+
+\begin{instruccion}
+  Escribe m\'inimo \textbf{3 conclusiones numeradas}. Cada una debe:
+  (a)~ser verificable con tus datos reales de la pr\'actica,
+  (b)~no ser una opini\'on general, y
+  (c)~conectar la pr\'actica con el proyecto final cuando sea posible.
+\end{instruccion}
+
+\begin{enumerate}[leftmargin=1.5cm, itemsep=0.5cm]
+
+  \item La comunicaci\'on de tipo LoRa necesita de dos dispositivos que tengan la misma banda y configuraci\'on específica a nivel software provista por su MCU para poder funcionar, es por ello que ambas programaciones se deben de seguir de forma simultánea, de no ser as\'i la comunicaci\'on es imposible.
+
+  \item El uso de dispositivos m\'oviles, como lo son celulares de uso personal, son incapaces de trabajar bajo este protocolo, por lo que la idea de tener una movilidad buena depende mucho del hardware extra que se dedique a poner. Lo que complica el hecho de considerarlo como una opci\'on portable para llevar a todos lados y escalable para la interacci\'on entre individuos personales.
+
+  \item Para entornos abiertos, a largas distancias, y con mensajes breves el protocolo LoRa se vuelve esencial, y pese a la necesidad de infraestructura extra, como el LoRaWAN para lograr mayores distancias, la velocidad de transmisión y fidelidad de los resultados es soberbia pero requiere incluso m\'as pensamiento sobre la necesidad de la pr\'actica para llegar a una configuraci\'on deseable tanto en el tamaño de la antena como el SF a usar.
+
+\end{enumerate}
+
+% =============================================================================
+\section*{Referencias}
+% =============================================================================
+
+\begin{instruccion}
+  Enlista m\'inimo 3 fuentes consultadas. Incluir: datasheet del SX1278,
+  documentaci\'on de la librer\'ia \texttt{sandeepmistry/LoRa} y al menos
+  una fuente adicional.
+\end{instruccion}
+
+\begin{enumerate}[leftmargin=1.5cm, label={[\arabic*]}]
+  \item Semtech. \textit{SX1276/77/78/79 Datasheet}. Rev. 7, 2026. https://www.alldatasheet.com/datasheet-pdf/pdf/800241/SEMTECH/SX1278.html
+  \item sandeepmistry. \textit{Arduino LoRa Library}. GitHub, 2024.
+  \item https://docs.ai-thinker.com/en/Ra-02/index.html
+\end{enumerate}
+
+\vspace{0.5cm}
+
+% ── Lista de verificación ─────────────────────────────────────────────────────
+\begin{mdframed}[backgroundcolor=amberLight, linecolor=amberMain, linewidth=1pt,
+  innerleftmargin=12pt, innerrightmargin=12pt,
+  innertopmargin=8pt,  innerbottommargin=8pt]
+  \textbf{\color{amberMain}Lista de verificaci\'on antes de entregar:}
+  \begin{itemize}[leftmargin=1.5cm, label=$\boxtimes$, itemsep=3pt]
+    \item Todas las tablas tienen datos reales (no estimados) de la pr\'actica
+    \item Las preguntas de c\'alculo muestran el procedimiento, no solo el resultado
+    \item Las capturas de pantalla del Serial Monitor est\'an insertadas
+    \item Las 3 conclusiones son espec\'ificas y verificables
+    \item PDF compilado sin errores en Overleaf
+    \item Archivo \texttt{.tex} subido al repositorio de GitHub
+  \end{itemize}
+\end{mdframed}
+
+\end{document}
